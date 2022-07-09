@@ -1,6 +1,6 @@
+import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.*;
-
 /**
  * A Generic heap class. Unlike Java's priority queue, this heap doesn't just
  * store Comparable objects. Instead, it can store any type of object
@@ -28,7 +28,7 @@ public class ArrayHeap<T> implements ExtrinsicPQ<T> {
      */
     private static int leftIndex(int i) {
         /* TODO: Your code here! */
-        return 0;
+        return i * 2;
     }
 
     /**
@@ -36,7 +36,7 @@ public class ArrayHeap<T> implements ExtrinsicPQ<T> {
      */
     private static int rightIndex(int i) {
         /* TODO: Your code here! */
-        return 0;
+        return i * 2 + 1;
     }
 
     /**
@@ -44,7 +44,7 @@ public class ArrayHeap<T> implements ExtrinsicPQ<T> {
      */
     private static int parentIndex(int i) {
         /* TODO: Your code here! */
-        return 0;
+        return i / 2;
     }
 
     /**
@@ -108,7 +108,22 @@ public class ArrayHeap<T> implements ExtrinsicPQ<T> {
         validateSinkSwimArg(index);
 
         /** TODO: Your code here. */
-        return;
+        while (true){
+            int smallerItemIndex = index;
+            if (inBounds(parentIndex(index))){
+                smallerItemIndex = min(parentIndex(index), smallerItemIndex);
+            }
+            else{
+                return;
+            }
+            if (smallerItemIndex == index){
+                swap(index, parentIndex(index));
+                index = parentIndex(index);
+            }
+            else{
+                return;
+            }
+        }
     }
 
     /**
@@ -117,9 +132,23 @@ public class ArrayHeap<T> implements ExtrinsicPQ<T> {
     private void sink(int index) {
         // Throws an exception if index is invalid. DON'T CHANGE THIS LINE.
         validateSinkSwimArg(index);
-
+        while(true){
+            int smallerItemIndex = index;
+            if (inBounds(leftIndex(index))){
+                smallerItemIndex = min(smallerItemIndex, leftIndex(index));
+            }
+            if(inBounds(rightIndex(index))){
+                smallerItemIndex = min(smallerItemIndex, rightIndex(index));
+            }
+            if (smallerItemIndex == index){
+                return;
+            }
+            else{
+                swap(index, smallerItemIndex);
+                index = smallerItemIndex;
+            }
+        }
         /** TODO: Your code here. */
-        return;
     }
 
     /**
@@ -134,6 +163,9 @@ public class ArrayHeap<T> implements ExtrinsicPQ<T> {
         }
 
         /* TODO: Your code here! */
+        size++;
+        contents[size] = new Node(item, priority);
+        swim(size);
     }
 
     /**
@@ -143,7 +175,7 @@ public class ArrayHeap<T> implements ExtrinsicPQ<T> {
     @Override
     public T peek() {
         /* TODO: Your code here! */
-        return null;
+        return getNode(1).item();
     }
 
     /**
@@ -158,7 +190,11 @@ public class ArrayHeap<T> implements ExtrinsicPQ<T> {
     @Override
     public T removeMin() {
         /* TODO: Your code here! */
-        return null;
+        T removedItem = peek();
+        swap(1, size);
+        contents[size--] = null;
+        sink(1);
+        return removedItem;
     }
 
     /**
@@ -181,7 +217,38 @@ public class ArrayHeap<T> implements ExtrinsicPQ<T> {
     @Override
     public void changePriority(T item, double priority) {
         /* TODO: Your code here! */
+        int index = changePriorityHelper(item, 1, priority);
+        if(index == 0){
+            return;
+        }
+        boolean toSwim = priority < contents[index].priority();
+        contents[index] = new Node(item, priority);
+        if(toSwim){
+            swim(index);
+        }
+        else{
+            sink(index);
+        }
         return;
+    }
+
+    private int changePriorityHelper(T item, int currentIndex, double priority){
+        if(!inBounds(currentIndex)){
+            return 0;
+        }
+        if(getNode(currentIndex).item().equals(item)){
+            return currentIndex;
+        }
+        if(getNode(currentIndex).priority() > priority){
+            return 0;
+        }
+        int temp = 0;
+        temp = changePriorityHelper(item, leftIndex(currentIndex), priority);
+        if(temp != 0){
+            return temp;
+        }
+        temp = changePriorityHelper(item, rightIndex(currentIndex), priority);
+        return temp;
     }
 
     /**
@@ -310,7 +377,7 @@ public class ArrayHeap<T> implements ExtrinsicPQ<T> {
             pq.contents[i] = new ArrayHeap<String>.Node("x" + i, i);
         }
         // Change root's priority to a large value.
-        pq.contents[1].myPriority = 10;
+        pq.changePriority("x1", 10);
         System.out.println("PQ before sinking:");
         System.out.println(pq);
 
